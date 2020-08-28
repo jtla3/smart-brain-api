@@ -1,9 +1,25 @@
 const express = require("express");
 const bcrypt = require("bcrypt-nodejs");
+const cors = require("cors");
+const knex = require("knex");
+
+const postgres = knex({
+  client: "pg",
+  connection: {
+    host: "127.0.0.1",
+    user: "Stala",
+    password: "",
+    database: "smart-brain",
+  },
+});
+
+console.log(postgres.select('*').from('users'));
+
 const app = express();
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+app.use(cors());
 
 const database = {
   users: [
@@ -39,24 +55,11 @@ app.get("/", (req, res) => {
 
 // signin
 app.post("/signin", (req, res) => {
-  // Load hash from your password DB.
-  bcrypt.compare("apples", '$2a$10$2DDtI1.xqMsVFGPiIcoGRuQH333./ecQ41oz1r/aUVKNW9eHwXd3K', function (err, res) {
-    // res == true
-    console.log("first guess", res)
-  });
-  bcrypt.compare(
-    "veggies",
-    "$2a$10$2DDtI1.xqMsVFGPiIcoGRuQH333./ecQ41oz1r/aUVKNW9eHwXd3K",
-    function (err, res) {
-      // res = false
-      console.log("second guess", res);
-    }
-  );
   if (
     req.body.email === database.users[0].email &&
     req.body.password === database.users[0].password
   ) {
-    res.json("sucess");
+    res.json(database.users[0]);
   } else {
     res.status(400).json("password and email do not match");
   }
@@ -65,12 +68,11 @@ app.post("/signin", (req, res) => {
 
 // register
 app.post("/register", (req, res) => {
-  const { email, name, password } = req.body;
+  const { email, name } = req.body;
   database.users.push({
     id: "125",
     name: name,
     email: email,
-    password: password,
     entries: 0,
     joined: new Date(),
   });
@@ -92,7 +94,7 @@ app.get("/profile/:id", (req, res) => {
 });
 
 // image endpoint to update entry input
-app.post("/image", (req, res) => {
+app.put("/image", (req, res) => {
   const { id } = req.body;
   let found = false;
   database.users.forEach((user) => {
