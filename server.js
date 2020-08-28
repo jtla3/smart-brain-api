@@ -3,6 +3,11 @@ const bcrypt = require("bcrypt-nodejs");
 const cors = require("cors");
 const knex = require("knex");
 
+const register = require("./controllers/register");
+const signin = require("./controllers/signin");
+const profile = require("./controllers/profile");
+const image = require("./controllers/image");
+
 const db = knex({
   client: "pg",
   connection: {
@@ -25,95 +30,19 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
 
-// const database = {
-//   users: [
-//     {
-//       id: "123",
-//       name: "John",
-//       email: "john@email.com",
-//       password: "cookies",
-//       entries: 0,
-//       joined: new Date(),
-//     },
-//     {
-//       id: "456",
-//       name: "Sally",
-//       email: "sally@email.com",
-//       password: "bananas",
-//       entries: 0,
-//       joined: new Date(),
-//     },
-//   ],
-//   login: [
-//     {
-//       id: "987",
-//       hash: "",
-//       email: "john@email.com",
-//     },
-//   ],
-// };
-
 app.get("/", (req, res) => {
-  res.send(database.users);
+  res.send(db.users)
 });
 
 // signin
-app.post("/signin", (req, res) => {
-  if (
-    req.body.email === database.users[0].email &&
-    req.body.password === database.users[0].password
-  ) {
-    res.json(database.users[0]);
-  } else {
-    res.status(400).json("password and email do not match");
-  }
-  res.json("signin");
-});
-
+app.post("/signin", signin.handleSignin(db, bcrypt)) 
 // register
-app.post("/register", (req, res) => {
-  const { email, name, password } = req.body;
-  db("users")
-    .returning("*")
-    .insert({
-      email: email,
-      name: name,
-      joined: new Date(),
-    })
-    .then((user) => {
-      res.json(user[0]);
-    })
-    .catch((err) => res.status(400).json("unable to register"));
-});
+app.post("/register", (req, res) => { register.handleRegister(req, res, db, bcrypt) });
 
-app.get("/profile/:id", (req, res) => {
-  const { id } = req.params;
-
-  db.select("*")
-    .from("users")
-    .where({ id })
-    .then((user) => {
-      if (user.length) {
-        res.json(user[0]);
-      } else {
-        res.status(400).json("not found");
-      }
-    })
-    .catch((err) => res.status(400).json("error getting user"));
-});
+app.get("/profile/:id", (req, res) => {profile.handleProfileGet(req, res, db)} )
 
 // image endpoint to update entry input
-app.put("/image", (req, res) => {
-  const { id } = req.body;
-  db("users")
-    .where("id", "=", id)
-    .increment("entries", 1)
-    .returning("entries")
-    .then((entries) => {
-      res.json(entries[0]);
-    })
-    .catch((err) => res.status(400).json("unable to get entries"));
-});
+app.put("/image", (req, res) => {image.handleImage(req, res, db)});
 
 app.listen(3001, () => {
   console.log("app is running on port 3001");
