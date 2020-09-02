@@ -31,25 +31,30 @@ app.use(express.json());
 app.use(cors());
 
 app.get("/", (req, res) => {
-  res.send(db.users)
+  res.send(db.users);
 });
 
 // signin
-app.post("/signin", signin.handleSignin(db, bcrypt)) 
+app.post("/signin", signin.handleSignin(db, bcrypt));
 // register
-app.post("/register", (req, res) => { register.handleRegister(req, res, db, bcrypt) });
+app.post("/register", (req, res) => {
+  register.handleRegister(req, res, db, bcrypt);
+});
 
-app.get("/profile/:id", (req, res) => {profile.handleProfileGet(req, res, db)} )
+app.get("/profile/:id", (req, res) => {
+  profile.handleProfileGet(req, res, db);
+});
 
 // image endpoint to update entry input
-app.put("/image", (req, res) => {image.handleImage(req, res, db)});
+app.put("/image", (req, res) => {
+  image.handleImage(req, res, db);
+});
+
+// endpoint to handle clarifai api call
+app.post("/imageurl", (req, res) => {
+  image.handleAPICall(req, res);
+});
 
 app.listen(3001, () => {
   console.log("app is running on port 3001");
 });
-
-// Route Route - this is working
-// Signin Route - POST Request (return new created user)
-// Regiser - POST Request (either registration is sucessful or fail)
-// Profile:userId -- GET Request
-// image endpoint --> PUT --> returns update count
